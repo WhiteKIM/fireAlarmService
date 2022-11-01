@@ -1,6 +1,9 @@
+from concurrent.futures import thread
 from distutils.log import debug
+from json import JSONDecodeError
 from shutil import which
 from socket import socket
+import threading
 from detection_helpers import *
 from tracking_helpers import *
 from custom_bridge_wrapper import *
@@ -10,8 +13,7 @@ from flask import Flask, Response, render_template, jsonify, abort, redirect, ur
 import datetime
 
 app = Flask(__name__)
-
-#run_with_ngrok(app)
+app.debug = True
 
 @app.route('/')
 def index():
@@ -31,9 +33,10 @@ def getAPI():
         "length" : len(modelList),
         "data" : []
     }
+
     for model in modelList:
-        jsonify['data'].append(model.getJsonInfo())
-    
+        jsonString = json.loads(model.getJsonInfo())
+        jsonify['data'].append(jsonString)
     return jsonify
     
 def gen():
@@ -43,10 +46,8 @@ def gen():
             yield frame
             yield b'\r\n'
 
-
 # 테스트용 함수
 # 웹상에서 연산을 수행한 결과값이 잘 나오는지를 확인하는 코드
-
 @app.route('/video_feed')
 def video_feed():
     return Response(gen(),mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -60,5 +61,6 @@ if __name__ == '__main__':
     # Initialise  class that binds detector and tracker in one class
     tracker = YOLOv7_DeepSORT(reID_model_path="./deep_sort/model_weights/mars-small128.pb", detector=detector)
     # output = None will not save the output video
-    app.run(debug=True, threaded= True)
+    app.run()
+    
     
