@@ -32,12 +32,14 @@ import json
 import socketio
 import base64
 
+from flask import jsonify
+
 host = 'http://127.0.0.1:25000'
 
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
-sio = socketio.Client()
-sio.connect(host)
+#sio = socketio.Client()
+#sio.connect(host)
 
  # load configuration for object detector
 config = ConfigProto()
@@ -74,18 +76,18 @@ class Model:
             return Model(self.cam, self.x, self.y, self.z, self.w)
 
     def getJsonInfo(self):
-        myjson = OrderedDict()
-        myjson['name'] = str(self.name)
-        myjson['index'] = int(self.index)
-        myjson['camInfo'] = str(self.cam)
-        myjson['Points'] = {
-            'X':int(self.x),
-            'Y':int(self.y),
-            'Z':int(self.z),
-            'W':int(self.w)
+        jsonify = {
+            'name' : str(self.name),
+            'index' : int(self.index),
+            'camInfo' : str(self.cam),
+            'Points' : {
+                'X':int(self.x),
+                'Y':int(self.y),
+                'Z':int(self.z),
+                'W':int(self.w)
+            }
         }
-        json_String = json.dumps(myjson, ensure_ascii=False , indent='\t')
-        return json_String
+        return json.dumps(jsonify)
 
 class YOLOv7_DeepSORT:
     '''
@@ -113,7 +115,6 @@ class YOLOv7_DeepSORT:
         self.tracker = Tracker(metric) # initialize tracker
 
     def track_video(self,video:str, skip_frames:int=0, verbose:int = 0):
-        start = time.time()
         '''
         Track any given webcam or video
         args: 
@@ -207,15 +208,17 @@ class YOLOv7_DeepSORT:
                         if(model.getIndex()== str(track.track_id)):
                             check = False
                             break
-                        model_index+=1
-                        
+                        model_index+=1 
                 if(check == False):
                     modelList[model_index].updateLocation(int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
                 else:
-                    modelList.append(Model(class_name ,str(track.track_id),str ,int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])))
+                    modelList.append(Model(class_name ,str(track.track_id), video ,int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])))
 
                 # 현재 존재하지 않는 모델이 있다면 제거
                 # 기점은 track이 업데이트될 경우에 제거됨
+                # 실시간으로 업데이트되지 않던 문제를 야매로 해결함
+                self.tracker.predict()  # Call the tracker
+                self.tracker.update(detections) #  updtate using Kalman Gain, 대략 1분에 한번정도 실행됨
                 removeList = []
                 for modelidx in range(len(modelList)):
                     count= 0
@@ -228,10 +231,14 @@ class YOLOv7_DeepSORT:
                 for rmIDX in removeList:
                     modelList.pop(rmIDX)
 
+                
+                # 디버깅을 위한 함수입니다
+                # 현재 찾아낸 객체가 얼마나 존재하는지 확인하기 위한 코드입니다
+                
                 for model in modelList:
                     print(class_name +model.getIndex(), end='|')
                 print('\n')
-
+                
                  
                 '''
                 # 트랙이 업데이트 되는 것은 대략 1분가량
@@ -271,9 +278,9 @@ class YOLOv7_DeepSORT:
                     break
             ret, buffer = cv2.imencode('.jpg', result, encode_param)
             b64data = base64.b64encode(buffer)
-            sio.emit('streaming', b64data)
+            #sio.emit('streaming', b64data)
             frame = buffer.tobytes()
             yield frame
         #output_video.release()
         cv2.destroyAllWindows()
-        sio.disconnect()
+        #sio.disconnect()
