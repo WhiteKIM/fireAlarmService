@@ -31,15 +31,16 @@ from collections import OrderedDict
 import json
 import socketio
 import base64
-
+from torch.multiprocessing import Process
 from flask import jsonify
 
+#host = 'http://192.168.1.37:5000'
 host = 'http://127.0.0.1:25000'
 
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
-#sio = socketio.Client()
-#sio.connect(host)
+sio = socketio.Client()
+sio.connect(host)
 
  # load configuration for object detector
 config = ConfigProto()
@@ -57,10 +58,13 @@ class Model:
         self.w = w
 
     def getLocation(self):
-        return self.x, self.y, self.z, self.w
+        return [self.x, self.y, self.z, self.w]
 
     def getIndex(self):
         return self.index
+
+    def getName(self):
+        return self.name+self.index
     
     def updateLocation(self, x, y, z, w):
         self.x = x
@@ -108,13 +112,17 @@ class YOLOv7_DeepSORT:
         self.coco_names_path = coco_names_path
         self.nms_max_overlap = nms_max_overlap
         self.class_names = read_class_names()
-
         # initialize deep sort
         self.encoder = create_box_encoder(reID_model_path, batch_size=1)
         metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget) # calculate cosine distance metric
         self.tracker = Tracker(metric) # initialize tracker
 
+    def start(self):
+        pro1 = Process(target=self.track_video, args=()).start()
+        return self
+
     def track_video(self,video:str, skip_frames:int=0, verbose:int = 0):
+        print('hello world')
         '''
         Track any given webcam or video
         args: 
@@ -234,20 +242,10 @@ class YOLOv7_DeepSORT:
                 
                 # 디버깅을 위한 함수입니다
                 # 현재 찾아낸 객체가 얼마나 존재하는지 확인하기 위한 코드입니다
-                
+                '''
                 for model in modelList:
                     print(class_name +model.getIndex(), end='|')
                 print('\n')
-                
-                 
-                '''
-                # 트랙이 업데이트 되는 것은 대략 1분가량
-                # 따라서 1분에 한번 데이터를 전송
-                if(time.time()-start > 60)
-                    for model in modelList:
-                        sendData = model.getJsonInfo()
-                        connect.send(sendData.encode('utf-8'))
-                    start = time()
                 '''
 
                 if verbose == 2:
@@ -273,14 +271,16 @@ class YOLOv7_DeepSORT:
             # output 영상을 웹상으로 띄어주는 코드
             # 키보드 입력으로 q가 들어오면 종료됨
             if True:
-                #cv2.imshow('output', output_video)
+                #cv2.imshow('output', result)
                 if cv2.waitKey(1) & 0xFF == ord('q'): 
                     break
             ret, buffer = cv2.imencode('.jpg', result, encode_param)
+            ##ret, buffer = cv2.imencode('.jpg', result)
             b64data = base64.b64encode(buffer)
-            #sio.emit('streaming', b64data)
+            ## 스트리밍을 위해 데이터를 보내는 코드
+            sio.emit('streaming', b64data)
             frame = buffer.tobytes()
             yield frame
         #output_video.release()
         cv2.destroyAllWindows()
-        #sio.disconnect()
+        sio.disconnect()
