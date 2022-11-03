@@ -1,0 +1,17 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "base64-arraybuffer": "^1.0.2",
+    "buffer": "^6.0.3",
+    "require": "^0.4.4",
+    "socket.io-client": "^4.5.3"
+  }
+}
