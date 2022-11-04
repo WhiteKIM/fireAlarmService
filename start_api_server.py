@@ -15,6 +15,8 @@ app.use_reloader=False
 host = '127.0.0.1'
 port = 12345
 
+body = bytes(0)
+
 @app.route('/')
 def index():
     """Video streaming home page."""
@@ -26,13 +28,11 @@ def index():
 # API를 통해 JSON을 전달할 함수
 @app.route('/get', methods=["GET"])
 def getAPI():
-    jsonify = {
-        "data" : []
-    }
-    if not body is None:
-        jsonString = json.loads(body)
-        jsonify['data'].append(jsonString)
-    return jsonify
+    try:
+        jsonify =json.loads(body)
+        return jsonify
+    except:
+        print(body)
 
 def GetJsonData():
     print('call')
@@ -43,7 +43,7 @@ def GetJsonData():
     client_socket, addr = server_socket.accept()
     try:
         while True:
-            data = client_socket.recv(1024)
+            data = client_socket.recv(3072)
             #print ("Raw data: ", data)
             header = data[:3]
             global body
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     thread = threading.Thread(target=GetJsonData, args=())
     thread.daemon = True
     thread.start()
-    app.run(threaded = True)
+    app.run(host='0.0.0.0', threaded = True)
     
     
     

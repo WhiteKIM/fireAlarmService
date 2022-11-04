@@ -140,7 +140,7 @@ class YOLOv7_DeepSORT:
         self.thread.start()
 
     def track_video1(self):
-        sio.connect(host)
+        #sio.connect(host)
         '''
         Track any given webcam or video
         args: 
@@ -295,7 +295,7 @@ class YOLOv7_DeepSORT:
             ret, buffer = cv2.imencode('.jpg', result, encode_param)
             b64data = base64.b64encode(buffer)
             ## 스트리밍을 위해 데이터를 보내는 코드
-            sio.emit('streaming', b64data)
+            #sio.emit('streaming', b64data)
             #frame = buffer.tobytes()
             #yield frame
         #output_video.release()
@@ -407,8 +407,8 @@ class YOLOv7_DeepSORT:
                 # 현재 존재하지 않는 모델이 있다면 제거
                 # 기점은 track이 업데이트될 경우에 제거됨
                 # 실시간으로 업데이트되지 않던 문제를 야매로 해결함
-                self.tracker.predict()  # Call the tracker
-                self.tracker.update(detections) #  updtate using Kalman Gain, 대략 1분에 한번정도 실행됨
+                #self.tracker.predict()  # Call the tracker
+                #self.tracker.update(detections) #  updtate using Kalman Gain, 대략 1분에 한번정도 실행됨
                 removeList = []
                 for modelidx in range(len(modelList)):
                     count= 0
@@ -471,18 +471,25 @@ def setJsonData():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(('127.0.0.1',12345))
     while True:
+        jsonify = {
+        "length" :len(modelList),
+        "data" : []
+        }
         if not modelList is Empty:
             for model in  modelList:
-                header = []
-                header.append(0x20)
-                body = model.getJsonInfo()
-                #print('body'+str(body))
-                leng = len(body)
+                jsonString = json.loads(model.getJsonInfo())
+                jsonify['data'].append(jsonString)
 
-                message= bytearray(header)
-                message+= bytearray(leng.to_bytes(2, byteorder="big"))
-                message+= bytes(body, 'utf-8')
-                client_socket.sendall(message)
+            header = []
+            header.append(0x20)
+            body = json.dumps(jsonify)
+            #print('body'+str(body))
+            leng = len(body)
+            #print(leng)
+            message= bytearray(header)
+            message+= bytearray(leng.to_bytes(2, byteorder="big"))
+            message+= bytes(body, 'utf-8')
+            client_socket.sendall(message)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
