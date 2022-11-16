@@ -25,7 +25,7 @@ yolov7 + deepsort 코드를 이용한 화재감지서비스. <br/>
 3. javascript
 
 ## 실사용영상
-![Project_Run](./run/detect/exp/project.avi)
+![Project_Run](https://youtu.be/LzrBnzF2Fzw)
 
 ## 구현완료
 1. flask를 통한 api서버
