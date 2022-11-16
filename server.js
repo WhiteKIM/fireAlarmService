@@ -1,4 +1,10 @@
-var io =  require('socket.io')();
+const { server } = require('live-server');
+
+var io =  require('socket.io')(server, {
+    cors: {
+        origins:'*'
+    }
+});
 
 io.sockets.on('connection', (socket) =>{
     socket.join("video");
