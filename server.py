@@ -14,11 +14,16 @@ def create_app():
     return app
 
 def socketio_init(socketio):
-    @socketio.on('streaming')
+    @socketio.on('sending')
     def sendVideo(data):
-        socketio.emit('streaming', data)
+        print(data)
+        socketio.emit('receiving', data)
+
+@socketio.on('connect', namespace='/send')
+def connected():
+    print('Sender Connected.....')
 
 app = create_app()
 
 if __name__ == '__main__':
-    socketio.run(app ,host='0.0.0.0',port=25000, debug = True)
+    socketio.run(app ,host='127.0.0.1',port=25000, debug = True)

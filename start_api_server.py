@@ -9,11 +9,11 @@ import json
 import socket
 
 app = Flask(__name__)
-app.debug = True
+app.debug = True    #플라스크 디버깅모드 설정
 app.use_reloader=False
 
-host = '127.0.0.1'
-port = 12345
+host = '127.0.0.1'  #소켓통신을 위해 사용할 주소 및 포트
+port = 12345    #소켓통신을 위해 사용할 주소 및 포트
 
 body = bytes(0)
 
@@ -26,14 +26,13 @@ def index():
     return render_template('index.html', **templateData)
 
 # API를 통해 JSON을 전달할 함수
-@app.route('/get', methods=["GET"])
+@app.route('/get', methods=['GET'])
 def getAPI():
-    try:
-        jsonify =json.loads(body)
-        return jsonify
-    except:
-        print(body)
+    print('body : ',end='')
+    print(body)
+    return jsonify(json.loads(body))
 
+        
 def GetJsonData():
     print('call')
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
