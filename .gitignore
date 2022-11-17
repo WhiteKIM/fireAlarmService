@@ -1,4 +1,8 @@
 ./traced_model.pt
 traced_model.pt
-./weights/yolov7x.pt
-/weights/yolov7x.pt
+./weights/bestofbest.pt
+/weights/bestofbest.pt
+./project.avi
+project.avi
+/runs/detect/exp/project.avi
+./runs/detect/exp/project.avi

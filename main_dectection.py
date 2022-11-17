@@ -35,6 +35,7 @@ from torch.multiprocessing import Process
 from flask import jsonify
 import threading
 import socket
+import sys
 
 host = 'http://192.168.1.37:5000'  #실제 사용할 호스트 주소
 #host = 'http://127.0.0.1:25000' # 테스트용도 호스트 주소
@@ -242,7 +243,7 @@ class YOLOv7_DeepSORT:
                 jsonData = json.loads(jsonData)
                 jsonData['Data'].append(jsonString)
                 jsonData = json.dumps(jsonData)
-                print(jsonData)
+                #print(jsonData)
                 '''
                     model_index = 0
                     for model in modelList:
@@ -348,7 +349,13 @@ def setJsonData():
             message+= bytearray(leng.to_bytes(2, byteorder="big"))
             message+= bytes(body, 'utf-8')
             #print(message)
-            client_socket.sendall(message)
+            print(len(message))
+            client_socket.send(message)
+            #야매로 해결한다
+            #json파일을 만들어 api서버에서 읽어서 사용
+            with open('result.json','w') as f:
+                json.dump(jsonString, f, ensure_ascii=False, indent=4)
+                f.close()
         else:
             continue
 
