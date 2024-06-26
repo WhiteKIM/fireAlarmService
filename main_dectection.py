@@ -37,8 +37,7 @@ import threading
 import socket
 import sys
 
-host = 'http://192.168.1.37:5000'  #실제 사용할 호스트 주소
-#host = 'http://127.0.0.1:25000' # 테스트용도 호스트 주소
+host = 'http://127.0.0.1:25000' # 테스트용도 호스트 주소
 
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
@@ -47,49 +46,6 @@ sio = socketio.Client()
  # load configuration for object detector
 config = ConfigProto()
 config.gpu_options.allow_growth = True
-modelList = []
-jsonData = None
-
-class Model:
-    def __init__(self, name, cam, x, y, z, w):
-        self.name = name
-        self.cam = cam
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
-
-    def getLocation(self):
-        return [self.x, self.y, self.z, self.w]
-
-    def getName(self):
-        return self.name
-    
-    def updateLocation(self, x, y, z, w):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
-
-    def printLocation(self):
-        print('name '+str(self.name)+' '+'Location XYZW : '+str(self.x)+' '+str(self.y)+' '+str(self.z)+' '+str(self.w))
-
-    def find(self, cam):
-        if(self.cam == cam):
-            return Model(self.cam, self.x, self.y, self.z, self.w)
-
-    def getJsonInfo(self):
-        jsonify = {
-            'name' : str(self.name),
-            'camInfo' : str(self.cam),
-            'Points' : {
-                'X':int(self.x),
-                'Y':int(self.y),
-                'Z':int(self.z),
-                'W':int(self.w)
-            }
-        }
-        return json.dumps(jsonify)
 
 class YOLOv7_DeepSORT:
     '''
@@ -117,8 +73,6 @@ class YOLOv7_DeepSORT:
 
     def __init__(self, video, skip_frames, verbose, reID_model_path:str, detector, max_cosine_distance:float=0.4, nn_budget:float=None, nms_max_overlap:float=1.0,
     coco_names_path:str ="./IO_data/input/classes/coco.names",  ):
-        print('생성자 호출')
-            
         self.detector = detector
         self.coco_names_path = coco_names_path
         self.nms_max_overlap = nms_max_overlap
@@ -131,12 +85,15 @@ class YOLOv7_DeepSORT:
         self.verbose = verbose
         self.video = video
         self.thread = threading.Thread(target=self.track_video1, args=())
-        print('스레드 생성')
         
     # 생성된 스레드 동작을 시작
     def run(self):
         self.thread.start()
 
+    """
+    # Yolo의 동작 구조상 하나의 프레임을 한번 탐지한다. 따라서 해당 프레임이 수행된 후에 해당 탐지
+    # 정보를 웹소켓이나 다른 방식을 사용해서 전송하면 될 것으로 보인다.
+    """
     def track_video1(self):
         sio.connect(host)
         '''
@@ -227,10 +184,10 @@ class YOLOv7_DeepSORT:
                     'name' : class_name,
                     'camInfo' : 'video',
                     'Points' : {
-                    'X':int(bbox[0]),
-                    'Y':int(bbox[1]),
-                    'Z':int(bbox[2]),
-                    'W':int(bbox[3])
+                    'X':int(bbox[0]),#min_x
+                    'Y':int(bbox[1]),#min_y
+                    'Z':int(bbox[2]),#max_x
+                    'W':int(bbox[3]) #max_y
                     }
                 }
                 jsonString = json.dumps(jsonify)
@@ -238,14 +195,6 @@ class YOLOv7_DeepSORT:
                 jsonData = json.loads(jsonData)
                 jsonData['Data'].append(jsonString)
                 jsonData = json.dumps(jsonData)
-                
-                # 디버깅을 위한 함수입니다
-                # 현재 찾아낸 객체가 얼마나 존재하는지 확인하기 위한 코드입니다
-                '''
-                for model in modelList:
-                    print(class_name, end='|')
-                print('\n')
-                '''
 
                 if self.verbose == 2:
                     print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
@@ -279,6 +228,10 @@ class YOLOv7_DeepSORT:
         cv2.destroyAllWindows()
         sio.disconnect()
 
+"""
+# WebSocket으로 데이터를 전송
+# 추후 기능 개선 예정
+"""
 def setJsonData():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(('127.0.0.1',12345))
@@ -304,20 +257,4 @@ def setJsonData():
                 f.close()
         else:
             continue
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--source', type=str, default="./IO_data/input/video/street.mp4", help='source')  # file/folder, 0 for webcam
-    opt = parser.parse_args()
-    #source = "./IO_data/input/video/street.mp4"
-    source = "project.avi"
-    detector = Detector(classes = [0]) # it'll detect ONLY fire
-    detector.load_model('./weights/bestofbest.pt',) # pass the path to the trained weight file
-    # Initialise  class that binds detector and tracker in one class
-    tracker = YOLOv7_DeepSORT(video=source, skip_frames=0, verbose=1, reID_model_path="./deep_sort/model_weights/mars-small128.pb", detector=detector)
-    th1 = threading.Thread(target=setJsonData, args=())
-    th1.daemon = True
-    th1.start()
-    tracker.run()
-    # output = None will not save the output video
     

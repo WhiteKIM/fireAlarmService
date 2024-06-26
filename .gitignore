@@ -6,3 +6,5 @@ traced_model.pt
 project.avi
 /runs/detect/exp/project.avi
 ./runs/detect/exp/project.avi
+/.vscode
+/__pycache__

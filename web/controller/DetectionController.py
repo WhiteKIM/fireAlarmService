@@ -9,3 +9,7 @@ app = FastAPI()
 @app.get("/")
 async def main():
     return {"message" : "test"}
+
+@app.get("/DetectionList")
+async def getDetectionList():
+    return []
