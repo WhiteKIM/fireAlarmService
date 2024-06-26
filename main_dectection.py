@@ -1,5 +1,7 @@
 '''
 A Moduele which binds Yolov7 repo with Deepsort with modifications
+FireAlarmService Main Logic
+Detecting Fire And Transfer Infomation
 '''
 
 import os
@@ -25,23 +27,16 @@ from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
 
 # import from helpers
-from tracking_helpers import read_class_names, create_box_encoder
-from detection_helpers import *
+from utils.tracking_helpers import read_class_names, create_box_encoder
+from utils.detection_helpers import *
 from collections import OrderedDict
 import json
-import socketio
 import base64
 from torch.multiprocessing import Process
 from flask import jsonify
 import threading
-import socket
-import sys
-
-host = 'http://127.0.0.1:25000' # 테스트용도 호스트 주소
 
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-
-sio = socketio.Client()
 
  # load configuration for object detector
 config = ConfigProto()
@@ -95,7 +90,6 @@ class YOLOv7_DeepSORT:
     # 정보를 웹소켓이나 다른 방식을 사용해서 전송하면 될 것으로 보인다.
     """
     def track_video1(self):
-        sio.connect(host)
         '''
         Track any given webcam or video
         args: 
@@ -162,11 +156,7 @@ class YOLOv7_DeepSORT:
 
             self.tracker.predict()  # Call the tracker
             self.tracker.update(detections) #  updtate using Kalman Gain, 대략 1분에 한번정도 실행됨
-            global jsonData
-            jsonData = {
-                'Data': []
-            }
-            jsonData = json.dumps(jsonData)
+
             for track in self.tracker.tracks:  # update new findings AKA tracks
                 if not track.is_confirmed() or track.time_since_update > 1:
                     continue 
@@ -179,22 +169,6 @@ class YOLOv7_DeepSORT:
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(class_name)+len(str(track.track_id)))*17, int(bbox[1])), color, -1)
                 # class_name는 라벨명, track_id는 몇번째 객체인지에 대한 번호
                 cv2.putText(frame, class_name,(int(bbox[0]), int(bbox[1]-11)),0, 0.6, (255,255,255),1, lineType=cv2.LINE_AA)
-                #modelList.append(Model(class_name ,str ,int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])))
-                jsonify = {
-                    'name' : class_name,
-                    'camInfo' : 'video',
-                    'Points' : {
-                    'X':int(bbox[0]),#min_x
-                    'Y':int(bbox[1]),#min_y
-                    'Z':int(bbox[2]),#max_x
-                    'W':int(bbox[3]) #max_y
-                    }
-                }
-                jsonString = json.dumps(jsonify)
-                jsonString = json.loads(jsonString)
-                jsonData = json.loads(jsonData)
-                jsonData['Data'].append(jsonString)
-                jsonData = json.dumps(jsonData)
 
                 if self.verbose == 2:
                     print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
@@ -203,58 +177,32 @@ class YOLOv7_DeepSORT:
             if self.verbose >= 1:
                 fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
 
-            
-            #yield frame
-
             result = np.asarray(frame)
             result = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             fps = vid.get(cv2.CAP_PROP_FPS)
             w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+            """
             # output 영상을 웹상으로 띄어주는 코드
             # 키보드 입력으로 q가 들어오면 종료됨
-            if True:
-                #cv2.imshow('output', result)
-                if cv2.waitKey(1) & 0xFF == ord('q'): 
+            """
+            if cv2.waitKey(1) & 0xFF == ord('q'): 
                     break
+            
+            """
+            # Add Data Transfer Logic
+            # Using WebSocket Transfer Video Data And Json
+            """
             ret, buffer = cv2.imencode('.jpg', result, encode_param)
             b64data = base64.b64encode(buffer)
-            ## 스트리밍을 위해 데이터를 보내는 코드
-            sio.emit('streaming', b64data)
-            #frame = buffer.tobytes()
-            #yield frame
         #output_video.release()
         cv2.destroyAllWindows()
-        sio.disconnect()
 
 """
 # WebSocket으로 데이터를 전송
 # 추후 기능 개선 예정
 """
 def setJsonData():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(('127.0.0.1',12345))
-    while True:
-        if not (jsonData==None):
-            header = []
-            header.append(0x20)
-            jsonString = json.loads(jsonData)
-            body = json.dumps(jsonString)
-            #print('body'+str(body))
-            leng = len(body)
-            #print(leng)
-            message= bytearray(header)
-            message+= bytearray(leng.to_bytes(2, byteorder="big"))
-            message+= bytes(body, 'utf-8')
-            #print(message)
-            print(len(message))
-            client_socket.send(message)
-            #야매로 해결한다
-            #json파일을 만들어 api서버에서 읽어서 사용
-            with open('result.json','w') as f:
-                json.dump(jsonString, f, ensure_ascii=False, indent=4)
-                f.close()
-        else:
-            continue
+    return
     

@@ -23,8 +23,8 @@ from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
 
 # import from helpers
-from tracking_helpers import read_class_names, create_box_encoder
-from detection_helpers import *
+from utils.tracking_helpers import read_class_names, create_box_encoder
+from utils.detection_helpers import *
 
 
  # load configuration for object detector
