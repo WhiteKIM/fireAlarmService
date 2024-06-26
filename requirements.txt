@@ -14,8 +14,9 @@ tqdm>=4.41.0
 protobuf<4.21.3
 
 ####
+fastapi[all]
 
-flask
+# WebSocket
 python-socketio[client]
 
 # Logging -------------------------------------

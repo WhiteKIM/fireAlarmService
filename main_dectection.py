@@ -189,11 +189,6 @@ class YOLOv7_DeepSORT:
                 names.append(class_name)
 
             names = np.array(names)
-            # 객체의 수를 세어주는 기능
-            #count = len(names)
-
-            #if count_objects:
-                #cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0, 0, 0), 2)
 
             # ---------------------------------- DeepSORT tacker work starts here ------------------------------------------------------------
             features = self.encoder(frame, bboxes) # encode detections and feed to tracker. [No of BB / detections per frame, embed_size]
@@ -243,41 +238,6 @@ class YOLOv7_DeepSORT:
                 jsonData = json.loads(jsonData)
                 jsonData['Data'].append(jsonString)
                 jsonData = json.dumps(jsonData)
-                #print(jsonData)
-                '''
-                    model_index = 0
-                    for model in modelList:
-                        if(model.getIndex()== str(track.track_id)):
-                            check = False
-                            break
-                        model_index+=1 
-                    
-                if(check == False):
-                    modelList[model_index].updateLocation(int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
-                else:
-                    modelList.append(Model(class_name, self.video ,int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])))
-                '''
-
-                # 현재 존재하지 않는 모델이 있다면 제거
-                # 기점은 track이 업데이트될 경우에 제거됨
-                # 실시간으로 업데이트되지 않던 문제를 야매로 해결함
-                '''
-                self.tracker.predict()  # Call the tracker
-                self.tracker.update(detections) #  updtate using Kalman Gain, 대략 1분에 한번정도 실행됨
-                removeList = []
-                for modelidx in range(len(modelList)):
-                    count= 0
-                    for track in self.tracker.tracks:
-                        if str(track.track_id)== modelList[modelidx].getIndex():
-                            count+=1
-                    if(count==0):
-                        removeList.append(modelidx)
-
-                for rmIDX in removeList:
-                    modelList.pop(rmIDX)
-
-                '''
-
                 
                 # 디버깅을 위한 함수입니다
                 # 현재 찾아낸 객체가 얼마나 존재하는지 확인하기 위한 코드입니다
@@ -293,8 +253,7 @@ class YOLOv7_DeepSORT:
             # -------------------------------- Tracker work ENDS here -----------------------------------------------------------------------
             if self.verbose >= 1:
                 fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
-                #if not count_objects: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)}")
-                #else: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)} || Objects tracked: {count}")
+
             
             #yield frame
 
@@ -303,9 +262,6 @@ class YOLOv7_DeepSORT:
             fps = vid.get(cv2.CAP_PROP_FPS)
             w = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-            #output_video = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), fps, (w, h))
-            #output_video.write(result)
 
             # output 영상을 웹상으로 띄어주는 코드
             # 키보드 입력으로 q가 들어오면 종료됨
@@ -327,16 +283,6 @@ def setJsonData():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(('127.0.0.1',12345))
     while True:
-        '''
-        jsonify = {
-        "length" :len(modelList),
-        "data" : []
-        }
-        if not modelList is Empty:
-            for model in  modelList:
-                jsonString = json.loads(model.getJsonInfo())
-                jsonify['data'].append(jsonString)
-            '''
         if not (jsonData==None):
             header = []
             header.append(0x20)
