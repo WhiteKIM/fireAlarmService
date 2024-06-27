@@ -4,6 +4,8 @@
 """
 from fastapi import FastAPI
 
+from web.model.InputSource import InputSource
+
 app = FastAPI()
 
 @app.get("/")
@@ -13,3 +15,7 @@ async def main():
 @app.get("/DetectionList")
 async def getDetectionList():
     return []
+
+@app.post("/addSource")
+async def addInputSource(InputSource : InputSource):
+    return
