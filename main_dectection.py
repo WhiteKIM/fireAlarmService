@@ -7,6 +7,8 @@ Detecting Fire And Transfer Infomation
 import os
 import argparse
 from queue import Empty
+
+from web.model.DetectionInfo import DetectionModel
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # comment out below line to enable tensorflow logging outputs
 import time
 import tensorflow as tf
@@ -36,11 +38,15 @@ from torch.multiprocessing import Process
 from flask import jsonify
 import threading
 
+# import My Module
+import init
+
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
  # load configuration for object detector
 config = ConfigProto()
 config.gpu_options.allow_growth = True
+
 
 class YOLOv7_DeepSORT:
     '''
@@ -169,6 +175,9 @@ class YOLOv7_DeepSORT:
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(class_name)+len(str(track.track_id)))*17, int(bbox[1])), color, -1)
                 # class_name는 라벨명, track_id는 몇번째 객체인지에 대한 번호
                 cv2.putText(frame, class_name,(int(bbox[0]), int(bbox[1]-11)),0, 0.6, (255,255,255),1, lineType=cv2.LINE_AA)
+
+                # append data
+                init.sharedData.append(DetectionModel(class_name, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])))
 
                 if self.verbose == 2:
                     print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))

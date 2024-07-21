@@ -6,6 +6,9 @@ from fastapi import FastAPI
 
 from web.model.InputSource import InputSource
 
+# import My Modules
+import init
+
 app = FastAPI()
 
 @app.get("/")
@@ -14,7 +17,7 @@ async def main():
 
 @app.get("/DetectionList")
 async def getDetectionList():
-    return []
+    return init.sharedData
 
 @app.post("/addSource")
 async def addInputSource(InputSource : InputSource):
