@@ -1,5 +1,6 @@
 ./traced_model.pt
 traced_model.pt
+/.venv
 ./weights/bestofbest.pt
 /weights/bestofbest.pt
 ./project.avi

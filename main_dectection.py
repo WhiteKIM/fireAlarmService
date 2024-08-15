@@ -5,8 +5,6 @@ Detecting Fire And Transfer Infomation
 '''
 
 import os
-import argparse
-from queue import Empty
 
 from web.model.DetectionInfo import DetectionModel
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # comment out below line to enable tensorflow logging outputs
@@ -31,12 +29,7 @@ from deep_sort.tracker import Tracker
 # import from helpers
 from utils.tracking_helpers import read_class_names, create_box_encoder
 from utils.detection_helpers import *
-from collections import OrderedDict
-import json
 import base64
-from torch.multiprocessing import Process
-from flask import jsonify
-import threading
 
 # import My Module
 import init
@@ -85,17 +78,13 @@ class YOLOv7_DeepSORT:
         self.skip_frames = skip_frames
         self.verbose = verbose
         self.video = video
-        self.thread = threading.Thread(target=self.track_video1, args=())
         
-    # 생성된 스레드 동작을 시작
-    def run(self):
-        self.thread.start()
-
     """
     # Yolo의 동작 구조상 하나의 프레임을 한번 탐지한다. 따라서 해당 프레임이 수행된 후에 해당 탐지
     # 정보를 웹소켓이나 다른 방식을 사용해서 전송하면 될 것으로 보인다.
     """
     def track_video1(self):
+        print('Detection Process Running')
         '''
         Track any given webcam or video
         args: 
