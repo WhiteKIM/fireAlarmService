@@ -11,7 +11,7 @@ from utils.torch_utils import select_device, load_classifier,TracedModel
 
 
 class Detector:
-    def __init__(self, conf_thres:float = 0.25, iou_thresh:float = 0.45, agnostic_nms:bool = False, save_conf:bool = False, classes:list = None):
+    def __init__(self, conf_thres:float = 0.25, iou_thresh:float = 0.45, agnostic_nms:bool = False, save_conf:bool = False, classes:list = None, device: str = ''):
         '''
         args:
         conf_thres: Thresholf for Classification
@@ -20,7 +20,7 @@ class Detector:
         save_conf: whether to save confidences in 'save_txt' labels afters inference
         classes: Filter by class from COCO. can be in the format [0] or [0,1,2] etc
         '''
-        self.device = select_device("cuda" if torch.cuda.is_available() else 'cpu')
+        self.device = select_device(device)
         self.conf_thres = conf_thres
         self.iou_thres = iou_thresh
         self.classes = classes

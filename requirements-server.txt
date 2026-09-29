@@ -1,0 +1,2 @@
+-r requirements-service.txt
+gunicorn>=23,<24

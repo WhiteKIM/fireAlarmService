@@ -1,0 +1,6 @@
+{
+  "sources": [
+    {"id": "camera-a", "uri": "project.avi", "fps": 10, "max_width": 960, "jpeg_quality": 75, "loop": true},
+    {"id": "camera-b", "uri": "project.avi", "fps": 10, "max_width": 640, "jpeg_quality": 75, "loop": true}
+  ]
+}

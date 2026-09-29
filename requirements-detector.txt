@@ -1,0 +1,12 @@
+-r requirements-service.txt
+# Legacy YOLOv7 imports; CUDA wheels may require PyTorch's platform-specific index.
+torch>=2.6,<3
+torchvision>=0.21,<1
+matplotlib>=3.9,<4
+pandas>=2.2,<4
+scipy>=1.14,<2
+seaborn>=0.13,<1
+Pillow>=11,<13
+PyYAML>=6,<7
+requests>=2.32,<3
+tqdm>=4.66,<5

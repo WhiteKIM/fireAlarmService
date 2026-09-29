@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>화재 탐지 모니터</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#111923;color:#e9eff6;font:16px system-ui,sans-serif}
+  main{max-width:1500px;margin:auto;padding:28px}header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+  h1{font-size:25px;margin:0}p{color:#a8b9cb}a{color:#98ceff}.notice{padding:14px;background:#553c19;color:#ffe0a1;border-radius:8px}
+  #grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:20px;margin-top:24px}
+  article{background:#1b2735;border:1px solid #33465a;border-radius:12px;overflow:hidden}h2{font-size:18px;margin:0}
+  .heading,.details{padding:16px}.heading{display:flex;justify-content:space-between;gap:12px}.state{color:#a8b9cb}
+  img{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#070c12}.details{line-height:1.7;font-variant-numeric:tabular-nums}
+  .links{display:flex;gap:20px;margin-top:10px}.error{color:#ffba8a}#connection{min-height:24px}
+</style>
+<main>
+  <header><h1>화재 탐지 모니터</h1><span>{{ mode }}</span></header>
+  <p>입력별 탐지 영상과 연결 상태를 확인합니다.</p>
+  {% if mode == 'passthrough' %}<div class="notice">전달 시험 모드입니다. 현재 영상에는 화재 탐지를 수행하지 않습니다.</div>{% endif %}
+  <p id="connection" role="status">입력 상태를 불러오는 중…</p>
+  <section id="grid" aria-label="입력 영상"></section>
+</main>
+<script>
+const cards = new Map();
+const labels = {starting:'준비 중',capturing:'입력 연결',reconnecting:'재연결 중',ended:'재생 종료',error:'입력 오류'};
+function createCard(source) {
+  const article = document.createElement('article');
+  article.innerHTML = '<div class="heading"><h2></h2><span class="state"></span></div><img><div class="details"><div class="metrics"></div><div class="error"></div><div class="links"><a>탐지 JSON</a><a>스냅샷</a></div></div>';
+  article.querySelector('h2').textContent = source.id;
+  const img = article.querySelector('img'); img.alt = source.id + ' 탐지 영상';
+  const base = '/api/sources/' + encodeURIComponent(source.id);
+  const links = article.querySelectorAll('a'); links[0].href = base + '/detections'; links[1].href = base + '/snapshot.jpg';
+  const card = {article, img, base, connected:false, lastReconnect:0};
+  img.onerror = () => {card.connected = false;};
+  document.querySelector('#grid').append(article); cards.set(source.id, card);
+  return card;
+}
+async function refresh() {
+  try {
+    const response = await fetch('/api/sources', {cache:'no-store', signal:AbortSignal.timeout(5000)});
+    if (!response.ok) throw new Error('API ' + response.status);
+    const data = await response.json();
+    document.querySelector('#connection').textContent = data.sources.length + '개 입력 · 2초마다 상태 갱신';
+    for (const source of data.sources) {
+      const card = cards.get(source.id) || createCard(source);
+      const stale = source.frame_age_seconds === null || source.frame_age_seconds > 10;
+      if (stale && card.connected) {
+        card.connected = false; card.img.removeAttribute('src');
+      }
+      card.article.querySelector('.state').textContent = (labels[source.status] || source.status) + (stale ? ' · 최근 영상 없음' : '');
+      const latest = source.latest;
+      card.article.querySelector('.metrics').textContent = latest
+        ? `탐지 ${latest.detections.length}개 · 처리 ${source.processed}프레임 · 건너뜀 ${source.skipped} · 처리 지연 ${latest.latency_ms}ms · 영상 나이 ${source.frame_age_seconds}초`
+        : '영상을 기다리는 중입니다.';
+      card.article.querySelector('.error').textContent = source.error || '';
+      if (!card.connected && latest && !stale && Date.now() - card.lastReconnect > 5000) {
+        card.lastReconnect = Date.now(); card.connected = true;
+        card.img.src = card.base + '/stream.mjpg?t=' + Date.now();
+      }
+    }
+  } catch(error) {document.querySelector('#connection').textContent = '서버에 연결할 수 없습니다. 다시 시도합니다.';}
+  setTimeout(refresh, 2000);
+}
+refresh();
+</script>
+</html>
