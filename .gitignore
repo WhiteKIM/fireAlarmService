@@ -4,7 +4,6 @@ traced_model.pt
 /weights/bestofbest.pt
 ./project.avi
 project.avi
-/runs/detect/exp/project.avi
 ./runs/detect/exp/project.avi
 .venv-service/
 __pycache__/
