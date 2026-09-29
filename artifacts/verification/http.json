@@ -1,0 +1,76 @@
+{
+  "mode": "passthrough",
+  "elapsed_seconds": 6.26,
+  "clients": [
+    {
+      "source": "camera-a",
+      "frames": 60,
+      "slow_reader": false,
+      "observed_fps": 9.43,
+      "average_jpeg_bytes": 79668,
+      "first_sequence": 1804,
+      "last_sequence": 1898
+    },
+    {
+      "source": "camera-a",
+      "frames": 60,
+      "slow_reader": false,
+      "observed_fps": 9.43,
+      "average_jpeg_bytes": 79668,
+      "first_sequence": 1804,
+      "last_sequence": 1898
+    },
+    {
+      "source": "camera-b",
+      "frames": 60,
+      "slow_reader": false,
+      "observed_fps": 9.48,
+      "average_jpeg_bytes": 43610,
+      "first_sequence": 1804,
+      "last_sequence": 1898
+    },
+    {
+      "source": "camera-b",
+      "frames": 60,
+      "slow_reader": false,
+      "observed_fps": 9.48,
+      "average_jpeg_bytes": 43610,
+      "first_sequence": 1804,
+      "last_sequence": 1898
+    },
+    {
+      "source": "camera-a",
+      "frames": 20,
+      "slow_reader": true,
+      "observed_fps": 3.22,
+      "average_jpeg_bytes": 79812,
+      "first_sequence": 1804,
+      "last_sequence": 1849
+    }
+  ],
+  "counters": [
+    {
+      "source": "camera-a",
+      "processed": 59,
+      "encodes": 59,
+      "processed_fps": 9.42,
+      "latency_ms": 56.43
+    },
+    {
+      "source": "camera-b",
+      "processed": 59,
+      "encodes": 59,
+      "processed_fps": 9.42,
+      "latency_ms": 34.09
+    }
+  ],
+  "encoding_comparison": {
+    "frames": 60,
+    "old_jpeg90_base64_bytes": 241375,
+    "new_jpeg75_bytes": 78412,
+    "payload_reduction_percent": 67.5,
+    "old_encode_base64_ms": 1.736,
+    "new_encode_ms": 0.902,
+    "note": "Component comparison only; quality/size differ. Not an end-to-end legacy benchmark."
+  }
+}
